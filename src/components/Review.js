@@ -1,10 +1,16 @@
 import { gql, useMutation } from "@apollo/client";
 import {
   Avatar,
+  Button,
   Card,
   CardActions,
   CardContent,
   CardHeader,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   IconButton,
   Menu,
   MenuItem,
@@ -20,6 +26,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import times from "lodash/times";
 import React, { useState } from "react";
+import { REVIEWS_QUERY } from "../graphql/Review";
 
 const FAVORITE_REVIEW_MUTATION = gql`
   mutation FavoriteReview($id: ObjID!, $favorite: Boolean!) {
@@ -38,6 +45,12 @@ const READ_USER_FAVORITES = gql`
         id
       }
     }
+  }
+`;
+
+const REMOVE_REVIEW_MUTATION = gql`
+  mutation RemoveReview($id: ObjID!) {
+    removeReview(id: $id)
   }
 `;
 
@@ -103,8 +116,34 @@ const StarRating = ({ rating }) => {
 };
 
 export const Review = ({ review }) => {
+  const { id } = review;
   const { text, stars, createdAt, favorited, author } = review;
   const [anchorEl, setAnchorEl] = useState(null);
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [removeReview] = useMutation(REMOVE_REVIEW_MUTATION, {
+    update: (cache) => {
+      const { reviews } = cache.readQuery({ query: REVIEWS_QUERY });
+
+      cache.writeQuery({
+        query: REVIEWS_QUERY,
+        data: { reviews: reviews.filter((review) => review.id !== id) },
+      });
+
+      const { currentUser } = cache.readQuery({ query: READ_USER_FAVORITES });
+
+      cache.writeQuery({
+        query: READ_USER_FAVORITES,
+        data: {
+          currentUser: {
+            ...currentUser,
+            favoriteReviews: currentUser.favoriteReviews.filter(
+              (review) => review.id !== id
+            ),
+          },
+        },
+      });
+    },
+  });
 
   function openMenu(event) {
     setAnchorEl(event.currentTarget);
@@ -120,6 +159,11 @@ export const Review = ({ review }) => {
 
   function deleteReview() {
     closeMenu();
+    removeReview(
+      { variables: { id } },
+      { optimisticResponse: { removeReview: true } }
+    );
+    setDeleteConfirmationOpen(false);
   }
 
   const LinkToProfile = ({ children }) => {
@@ -164,8 +208,38 @@ export const Review = ({ review }) => {
       </Card>
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={closeMenu}>
         <MenuItem onClick={editReview}>Edit</MenuItem>
-        <MenuItem onClick={deleteReview}>Delete</MenuItem>
+        <MenuItem
+          onClick={() => {
+            closeMenu();
+            setDeleteConfirmationOpen(true);
+          }}
+        >
+          Delete
+        </MenuItem>
       </Menu>
+      <Dialog
+        open={deleteConfirmationOpen}
+        onClose={() => setDeleteConfirmationOpen(false)}
+      >
+        <DialogTitle>Delete Review?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            A better UX is probably just letting you single-click delete with an
+            undo toast, but that's harder to code right{" "}
+            <span role="img" aria-label="grinning face">
+              😄
+            </span>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmationOpen(false)}>
+            Cancel
+          </Button>
+          <Button onClick={deleteReview} color="primary" autoFocus>
+            Sudo Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

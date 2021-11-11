@@ -1,4 +1,4 @@
-import gql from "graphql-tag";
+import { gql } from "@apollo/client";
 
 export const REVIEW_ENTRY = gql`
   fragment ReviewEntry on Review {

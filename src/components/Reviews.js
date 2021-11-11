@@ -33,7 +33,7 @@ export const Reviews = () => {
         {loading ? (
           <div className="Spinner" />
         ) : (
-          reviews.map((review) => <Review key={review.id} review={review} />)
+          reviews?.map((review) => <Review key={review.id} review={review} />)
         )}
 
         {user && (
