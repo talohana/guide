@@ -104,7 +104,7 @@ const StarRating = ({ rating }) => {
 
 export const Review = ({ review }) => {
   const { text, stars, createdAt, favorited, author } = review;
-  const [anchorEl, setAnchorEl] = useState();
+  const [anchorEl, setAnchorEl] = useState(null);
 
   function openMenu(event) {
     setAnchorEl(event.currentTarget);
@@ -127,7 +127,7 @@ export const Review = ({ review }) => {
       <a
         href={`https://github.com/${author.username}`}
         target="_blank"
-        rel="noopener noreferer"
+        rel="noopener noreferrer"
       >
         {children}
       </a>

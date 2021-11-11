@@ -43,7 +43,7 @@ export const Profile = () => {
             <a
               href="https://github.com/settings/applications"
               target="_blank"
-              rel="noopener noreferer"
+              rel="noopener noreferrer"
             >
               <code>{user.username}</code>
             </a>

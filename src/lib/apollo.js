@@ -8,13 +8,6 @@ const httpLink = new HttpLink({
   uri: "https://api.graphql.guide/graphql",
 });
 
-const wsLink = new WebSocketLink({
-  uri: "wss://api.graphql.guide/subscriptions",
-  options: {
-    reconnect: true,
-  },
-});
-
 const authLink = setContext(async (_, { headers }) => {
   const token = await getAuthToken({
     doLoginIfTokenExpired: true,
@@ -33,6 +26,13 @@ const authLink = setContext(async (_, { headers }) => {
 });
 
 const authedHttpLink = authLink.concat(httpLink);
+
+const wsLink = new WebSocketLink({
+  uri: `wss://api.graphql.guide/subscriptions`,
+  options: {
+    reconnect: true,
+  },
+});
 
 const link = split(
   ({ query }) => {
