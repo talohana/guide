@@ -14,6 +14,7 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  Modal,
   Typography,
 } from "@material-ui/core";
 import {
@@ -29,6 +30,7 @@ import times from "lodash/times";
 import React, { useState } from "react";
 import { REVIEWS_QUERY } from "../graphql/Review";
 import { useUser } from "../lib/useUser";
+import { ReviewForm } from "./ReviewForm";
 
 const FAVORITE_REVIEW_MUTATION = gql`
   mutation FavoriteReview($id: ObjID!, $favorite: Boolean!) {
@@ -125,6 +127,7 @@ export const Review = ({ review }) => {
   const { text, stars, createdAt, favorited, author } = review;
   const [anchorEl, setAnchorEl] = useState(null);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [removeReview] = useMutation(REMOVE_REVIEW_MUTATION, {
     update: (cache) => {
       const { reviews } = cache.readQuery({ query: REVIEWS_QUERY });
@@ -158,10 +161,6 @@ export const Review = ({ review }) => {
     setAnchorEl(null);
   }
 
-  function editReview() {
-    closeMenu();
-  }
-
   function deleteReview() {
     closeMenu();
     removeReview(
@@ -173,6 +172,11 @@ export const Review = ({ review }) => {
       }
     });
     setDeleteConfirmationOpen(false);
+  }
+
+  function editReview() {
+    closeMenu();
+    setEditing(true);
   }
 
   const LinkToProfile = ({ children }) => {
@@ -251,6 +255,9 @@ export const Review = ({ review }) => {
           </Button>
         </DialogActions>
       </Dialog>
+      <Modal open={editing} onClose={() => setEditing(false)}>
+        <ReviewForm done={() => setEditing(false)} review={review} />
+      </Modal>
     </div>
   );
 };

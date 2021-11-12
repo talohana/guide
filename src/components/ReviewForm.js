@@ -1,6 +1,7 @@
 import { gql, useMutation } from "@apollo/client";
 import { Button, TextField } from "@material-ui/core";
 import { Star, StarBorder } from "@material-ui/icons";
+import classnames from "classnames";
 import pick from "lodash/pick";
 import React, { useState } from "react";
 import StarInput from "react-star-rating-component";
@@ -19,10 +20,20 @@ const ADD_REVIEW_MUTATION = gql`
   ${REVIEW_ENTRY}
 `;
 
-export const AddReview = ({ done }) => {
-  const [text, setText] = useState(),
-    [stars, setStars] = useState(),
-    [errorText, setErrorText] = useState();
+const EDIT_REVIEW_MUTATION = gql`
+  mutation EditReview($id: ObjID!, $input: UpdateReviewInput!) {
+    updateReview(id: $id, input: $input) {
+      id
+      text
+      stars
+    }
+  }
+`;
+
+export const ReviewForm = ({ done, review }) => {
+  const [text, setText] = useState(review ? review.text : "");
+  const [stars, setStars] = useState(review ? review.stars : null);
+  const [errorText, setErrorText] = useState();
 
   const { user } = useUser();
 
@@ -38,6 +49,9 @@ export const AddReview = ({ done }) => {
     },
   });
 
+  const [editReview] = useMutation(EDIT_REVIEW_MUTATION);
+  const isEditing = !!review;
+
   function handleSubmit(event) {
     event.preventDefault();
 
@@ -47,27 +61,52 @@ export const AddReview = ({ done }) => {
       return;
     }
 
-    addReview({
-      variables: {
-        input: { text, stars },
-      },
-      optimisticResponse: {
-        createReview: {
-          __typename: "Review",
-          id: null,
-          text,
-          stars,
-          createdAt: new Date(),
-          favorited: false,
-          author: pick(user, ["__typename", "id", "name", "photo", "username"]),
+    if (isEditing) {
+      editReview({
+        variables: { id: review.id, input: { text, stars } },
+        optimisticResponse: {
+          updateReview: {
+            __typename: "Review",
+            id: review.id,
+            text,
+            stars,
+          },
         },
-      },
-    });
+      });
+    } else {
+      addReview({
+        variables: {
+          input: { text, stars },
+        },
+        optimisticResponse: {
+          createReview: {
+            __typename: "Review",
+            id: null,
+            text,
+            stars,
+            createdAt: new Date(),
+            favorited: false,
+            author: pick(user, [
+              "__typename",
+              "id",
+              "name",
+              "photo",
+              "username",
+            ]),
+          },
+        },
+      });
+    }
+
     done();
   }
 
   return (
-    <form className="AddReview" autoComplete="off" onSubmit={handleSubmit}>
+    <form
+      className={classnames("ReviewForm", { editing: isEditing })}
+      autoComplete="off"
+      onSubmit={handleSubmit}
+    >
       <TextField
         className="AddReview-text"
         label="Review text"
@@ -101,7 +140,7 @@ export const AddReview = ({ done }) => {
         </Button>
 
         <Button type="submit" color="primary" className="AddReview-submit">
-          Add review
+          {isEditing ? "Save" : "Add review"}
         </Button>
       </div>
     </form>

@@ -5,8 +5,8 @@ import get from "lodash/get";
 import React, { useState } from "react";
 import { REVIEWS_QUERY } from "../graphql/Review";
 import { useUser } from "../lib/useUser";
-import { AddReview } from "./AddReview";
 import { Review } from "./Review";
+import { ReviewForm } from "./ReviewForm";
 
 export const Reviews = () => {
   const [addingReview, setAddingReview] = useState(false);
@@ -47,7 +47,7 @@ export const Reviews = () => {
             </Fab>
 
             <Modal open={addingReview} onClose={() => setAddingReview(false)}>
-              <AddReview done={() => setAddingReview(false)} />
+              <ReviewForm ReviewForm done={() => setAddingReview(false)} />
             </Modal>
           </div>
         )}
