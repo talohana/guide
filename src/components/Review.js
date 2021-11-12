@@ -24,9 +24,11 @@ import {
   StarBorder,
 } from "@material-ui/icons";
 import { formatDistanceToNow } from "date-fns";
+import find from "lodash/find";
 import times from "lodash/times";
 import React, { useState } from "react";
 import { REVIEWS_QUERY } from "../graphql/Review";
+import { useUser } from "../lib/useUser";
 
 const FAVORITE_REVIEW_MUTATION = gql`
   mutation FavoriteReview($id: ObjID!, $favorite: Boolean!) {
@@ -117,6 +119,9 @@ const StarRating = ({ rating }) => {
 
 export const Review = ({ review }) => {
   const { id } = review;
+  const { user } = useUser();
+
+  // eslint-disable-next-line no-unused-vars
   const { text, stars, createdAt, favorited, author } = review;
   const [anchorEl, setAnchorEl] = useState(null);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
@@ -162,7 +167,11 @@ export const Review = ({ review }) => {
     removeReview(
       { variables: { id } },
       { optimisticResponse: { removeReview: true } }
-    );
+    ).catch((e) => {
+      if (find(e.graphQLErrors, { message: "unauthorized" })) {
+        alert("👮🏻‍♀️✋🏻 You can only delete your own reviews!");
+      }
+    });
     setDeleteConfirmationOpen(false);
   }
 
@@ -188,9 +197,11 @@ export const Review = ({ review }) => {
             </LinkToProfile>
           }
           action={
-            <IconButton onClick={openMenu}>
-              <MoreVert />
-            </IconButton>
+            user && (
+              <IconButton onClick={openMenu}>
+                <MoreVert />
+              </IconButton>
+            )
           }
           title={<LinkToProfile>{author.name}</LinkToProfile>}
           subheader={stars && <StarRating rating={stars} />}
@@ -203,7 +214,7 @@ export const Review = ({ review }) => {
             {formatDistanceToNow(createdAt)} ago
           </Typography>
           <div className="Review-spacer" />
-          <FavoriteButton {...review} />
+          {user && <FavoriteButton {...review} />}
         </CardActions>
       </Card>
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={closeMenu}>

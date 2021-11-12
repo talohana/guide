@@ -3,6 +3,7 @@ import { setContext } from "@apollo/client/link/context";
 import { WebSocketLink } from "@apollo/client/link/ws";
 import { getMainDefinition } from "@apollo/client/utilities";
 import { getAuthToken } from "auth0-helpers";
+import { errorLink } from "./errorLink";
 
 const httpLink = new HttpLink({
   uri: "https://api.graphql.guide/graphql",
@@ -34,7 +35,7 @@ const wsLink = new WebSocketLink({
   },
 });
 
-const link = split(
+const networkLink = split(
   ({ query }) => {
     const { kind, operation } = getMainDefinition(query);
     return kind === "OperationDefinition" && operation === "subscription";
@@ -42,6 +43,8 @@ const link = split(
   wsLink,
   authedHttpLink
 );
+
+const link = errorLink.concat(networkLink);
 
 const cache = new InMemoryCache();
 
