@@ -3,6 +3,7 @@ import { setContext } from "@apollo/client/link/context";
 import { WebSocketLink } from "@apollo/client/link/ws";
 import { getMainDefinition } from "@apollo/client/utilities";
 import { getAuthToken } from "auth0-helpers";
+import { find } from "lodash";
 import { errorLink } from "./errorLink";
 
 const httpLink = new HttpLink({
@@ -46,6 +47,28 @@ const networkLink = split(
 
 const link = errorLink.concat(networkLink);
 
-const cache = new InMemoryCache();
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        reviews: {
+          merge(existing = [], incoming, { readField }) {
+            const notAlreadyInCache = (review) =>
+              !find(
+                existing,
+                (existingReview) =>
+                  readField("id", existingReview) === readField("id", review)
+              );
+
+            const newReviews = incoming.filter(notAlreadyInCache);
+
+            return [...existing, ...newReviews];
+          },
+          keyArgs: false,
+        },
+      },
+    },
+  },
+});
 
 export const apollo = new ApolloClient({ link, cache });

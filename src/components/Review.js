@@ -28,7 +28,6 @@ import { formatDistanceToNow } from "date-fns";
 import find from "lodash/find";
 import times from "lodash/times";
 import React, { useState } from "react";
-import { REVIEWS_QUERY } from "../graphql/Review";
 import { useUser } from "../lib/useUser";
 import { ReviewForm } from "./ReviewForm";
 
@@ -37,17 +36,6 @@ const FAVORITE_REVIEW_MUTATION = gql`
     favoriteReview(id: $id, favorite: $favorite) {
       id
       favorited
-    }
-  }
-`;
-
-const READ_USER_FAVORITES = gql`
-  query ReadUserFavorites {
-    currentUser {
-      id
-      favoriteReviews {
-        id
-      }
     }
   }
 `;
@@ -68,29 +56,25 @@ const FavoriteButton = ({ id, favorited }) => {
       },
     },
     update: (cache, { data: { favoriteReview } }) => {
-      const { currentUser } = cache.readQuery({ query: READ_USER_FAVORITES });
-      let newUser;
+      cache.modify({
+        fields: {
+          currentUser(currentUserRef) {
+            cache.modify({
+              id: currentUserRef.__ref,
+              fields: {
+                favoriteReviews: (reviewRefs, { readField }) => {
+                  return favoriteReview.favorited
+                    ? [...reviewRefs, { __ref: `Review:${id}` }]
+                    : reviewRefs.filter(
+                        (reviewRef) => readField("id", reviewRef) !== id
+                      );
+                },
+              },
+            });
 
-      if (favoriteReview.favorited) {
-        newUser = {
-          ...currentUser,
-          favoriteReviews: [
-            ...currentUser.favoriteReviews,
-            { id, __typename: "Review" },
-          ],
-        };
-      } else {
-        newUser = {
-          ...currentUser,
-          favoriteReviews: currentUser.favoriteReviews.filter(
-            (review) => review.id !== id
-          ),
-        };
-      }
-
-      cache.writeQuery({
-        query: READ_USER_FAVORITES,
-        data: { currentUser: newUser },
+            return currentUserRef;
+          },
+        },
       });
     },
   });
@@ -130,26 +114,7 @@ export const Review = ({ review }) => {
   const [editing, setEditing] = useState(false);
   const [removeReview] = useMutation(REMOVE_REVIEW_MUTATION, {
     update: (cache) => {
-      const { reviews } = cache.readQuery({ query: REVIEWS_QUERY });
-
-      cache.writeQuery({
-        query: REVIEWS_QUERY,
-        data: { reviews: reviews.filter((review) => review.id !== id) },
-      });
-
-      const { currentUser } = cache.readQuery({ query: READ_USER_FAVORITES });
-
-      cache.writeQuery({
-        query: READ_USER_FAVORITES,
-        data: {
-          currentUser: {
-            ...currentUser,
-            favoriteReviews: currentUser.favoriteReviews.filter(
-              (review) => review.id !== id
-            ),
-          },
-        },
-      });
+      cache.evict({ id: cache.identify(review) });
     },
   });
 

@@ -5,7 +5,7 @@ import classnames from "classnames";
 import pick from "lodash/pick";
 import React, { useState } from "react";
 import StarInput from "react-star-rating-component";
-import { REVIEWS_QUERY, REVIEW_ENTRY } from "../graphql/Review";
+import { REVIEW_ENTRY } from "../graphql/Review";
 import { useUser } from "../lib/useUser";
 import { validateReview } from "../lib/validators";
 
@@ -38,14 +38,37 @@ export const ReviewForm = ({ done, review }) => {
   const { user } = useUser();
 
   const [addReview] = useMutation(ADD_REVIEW_MUTATION, {
-    update: (store, { data: { createReview: newReview } }) => {
-      const { reviews } = store.readQuery({
-        query: REVIEWS_QUERY,
+    update: (cache, { data: { createReview: newReview } }) => {
+      cache.modify({
+        fields: {
+          reviews(existingReviewRefs = []) {
+            const newReviewRef = cache.writeFragment({
+              data: newReview,
+              fragment: gql`
+                fragment NewReview on Review {
+                  id
+                  text
+                  stars
+                  createdAt
+                  favorited
+                  author {
+                    id
+                  }
+                }
+              `,
+            });
+
+            return [newReviewRef, ...existingReviewRefs];
+          },
+        },
       });
-      store.writeQuery({
-        query: REVIEWS_QUERY,
-        data: { reviews: [newReview, ...reviews] },
-      });
+      // const { reviews } = store.readQuery({
+      //   query: REVIEWS_QUERY,
+      // });
+      // store.writeQuery({
+      //   query: REVIEWS_QUERY,
+      //   data: { reviews: [newReview, ...reviews] },
+      // });
     },
   });
 

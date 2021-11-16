@@ -1,17 +1,13 @@
-import { useQuery } from "@apollo/client";
 import { Fab, Modal } from "@material-ui/core";
 import { Add, Favorite } from "@material-ui/icons";
 import get from "lodash/get";
 import React, { useState } from "react";
-import { REVIEWS_QUERY } from "../graphql/Review";
 import { useUser } from "../lib/useUser";
-import { Review } from "./Review";
 import { ReviewForm } from "./ReviewForm";
+import { ReviewList } from "./ReviewList";
 
 export const Reviews = () => {
   const [addingReview, setAddingReview] = useState(false);
-
-  const { data: { reviews } = {}, loading } = useQuery(REVIEWS_QUERY);
 
   const { user } = useUser();
   const favoriteCount = get(user, "favoriteReviews.length");
@@ -29,29 +25,24 @@ export const Reviews = () => {
           <h1>Reviews</h1>
         </header>
       </div>
-      <div className="Reviews-content">
-        {loading ? (
-          <div className="Spinner" />
-        ) : (
-          reviews?.map((review) => <Review key={review.id} review={review} />)
-        )}
 
-        {user && (
-          <div>
-            <Fab
-              onClick={() => setAddingReview(true)}
-              color="primary"
-              className="Reviews-add"
-            >
-              <Add />
-            </Fab>
+      <ReviewList />
 
-            <Modal open={addingReview} onClose={() => setAddingReview(false)}>
-              <ReviewForm ReviewForm done={() => setAddingReview(false)} />
-            </Modal>
-          </div>
-        )}
-      </div>
+      {user && (
+        <div>
+          <Fab
+            onClick={() => setAddingReview(true)}
+            color="primary"
+            className="Reviews-add"
+          >
+            <Add />
+          </Fab>
+
+          <Modal open={addingReview} onClose={() => setAddingReview(false)}>
+            <ReviewForm ReviewForm done={() => setAddingReview(false)} />
+          </Modal>
+        </div>
+      )}
     </main>
   );
 };
