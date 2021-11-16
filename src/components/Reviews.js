@@ -1,4 +1,4 @@
-import { Fab, Modal } from "@material-ui/core";
+import { Fab, FormControl, MenuItem, Modal, Select } from "@material-ui/core";
 import { Add, Favorite } from "@material-ui/icons";
 import get from "lodash/get";
 import React, { useState } from "react";
@@ -7,6 +7,7 @@ import { ReviewForm } from "./ReviewForm";
 import { ReviewList } from "./ReviewList";
 
 export const Reviews = () => {
+  const [orderBy, setOrderBy] = useState("createdAt_DESC");
   const [addingReview, setAddingReview] = useState(false);
 
   const { user } = useUser();
@@ -23,10 +24,20 @@ export const Reviews = () => {
             </div>
           ) : null}
           <h1>Reviews</h1>
+          <FormControl>
+            <Select
+              value={orderBy}
+              onChange={(e) => setOrderBy(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="createdAt_DESC">Newest</MenuItem>
+              <MenuItem value="createdAt_ASC">Oldest</MenuItem>
+            </Select>
+          </FormControl>
         </header>
       </div>
 
-      <ReviewList />
+      <ReviewList orderBy={orderBy} />
 
       {user && (
         <div>

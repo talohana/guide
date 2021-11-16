@@ -4,9 +4,9 @@ import React, { useCallback, useEffect } from "react";
 import { REVIEWS_QUERY } from "../graphql/Review";
 import { Review } from "./Review";
 
-export const ReviewList = () => {
+export const ReviewList = ({ orderBy }) => {
   const { data, fetchMore, networkStatus } = useQuery(REVIEWS_QUERY, {
-    variables: { skip: 0, limit: 3 },
+    variables: { limit: 10, orderBy },
     notifyOnNetworkStatusChange: true,
     errorPolicy: "all",
   });
@@ -22,7 +22,9 @@ export const ReviewList = () => {
         const closeToBottom = window.scrollY > 0 && pixelsFromBottom < 250;
 
         if (closeToBottom && reviews.length > 0) {
-          fetchMore({ variables: { skip: reviews.length } });
+          const lastId = reviews[reviews.length - 1].id;
+
+          fetchMore({ variables: { after: lastId } });
         }
       }
     }, 100),

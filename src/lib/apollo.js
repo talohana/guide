@@ -64,7 +64,7 @@ const cache = new InMemoryCache({
 
             return [...existing, ...newReviews];
           },
-          keyArgs: false,
+          keyArgs: ["orderBy"],
         },
       },
     },

@@ -41,7 +41,11 @@ export const ReviewForm = ({ done, review }) => {
     update: (cache, { data: { createReview: newReview } }) => {
       cache.modify({
         fields: {
-          reviews(existingReviewRefs = []) {
+          reviews(existingReviewRefs = [], { storeFieldName }) {
+            if (!storeFieldName.includes("createdAt_DESC")) {
+              return existingReviewRefs;
+            }
+
             const newReviewRef = cache.writeFragment({
               data: newReview,
               fragment: gql`
@@ -62,13 +66,6 @@ export const ReviewForm = ({ done, review }) => {
           },
         },
       });
-      // const { reviews } = store.readQuery({
-      //   query: REVIEWS_QUERY,
-      // });
-      // store.writeQuery({
-      //   query: REVIEWS_QUERY,
-      //   data: { reviews: [newReview, ...reviews] },
-      // });
     },
   });
 
