@@ -7,7 +7,11 @@ import { ReviewForm } from "./ReviewForm";
 import { ReviewList } from "./ReviewList";
 
 export const Reviews = () => {
-  const [orderBy, setOrderBy] = useState("createdAt_DESC");
+  const [filters, setFilters] = useState({
+    orderBy: "createdAt_DESC",
+    minStars: "1",
+    minSentences: "1",
+  });
   const [addingReview, setAddingReview] = useState(false);
 
   const { user } = useUser();
@@ -26,18 +30,57 @@ export const Reviews = () => {
           <h1>Reviews</h1>
           <FormControl>
             <Select
-              value={orderBy}
-              onChange={(e) => setOrderBy(e.target.value)}
+              value={filters.orderBy}
+              onChange={(e) =>
+                setFilters((prevFilters) => ({
+                  ...prevFilters,
+                  orderBy: e.target.value,
+                }))
+              }
               displayEmpty
             >
               <MenuItem value="createdAt_DESC">Newest</MenuItem>
               <MenuItem value="createdAt_ASC">Oldest</MenuItem>
             </Select>
+
+            <Select
+              value={filters.minStars}
+              onChange={(e) =>
+                setFilters((prevFilters) => ({
+                  ...prevFilters,
+                  minStars: e.target.value,
+                }))
+              }
+              displayEmpty
+            >
+              <MenuItem value="1">1+ stars</MenuItem>
+              <MenuItem value="2">2+ stars</MenuItem>
+              <MenuItem value="3">3+ stars</MenuItem>
+              <MenuItem value="4">4+ stars</MenuItem>
+              <MenuItem value="5">5+ stars</MenuItem>
+            </Select>
+
+            <Select
+              value={filters.minSentences}
+              onChange={(e) =>
+                setFilters((prevFilters) => ({
+                  ...prevFilters,
+                  minSentences: e.target.value,
+                }))
+              }
+              displayEmpty
+            >
+              <MenuItem value="1">1+ sentences</MenuItem>
+              <MenuItem value="2">2+ sentences</MenuItem>
+              <MenuItem value="3">3+ sentences</MenuItem>
+              <MenuItem value="4">4+ sentences</MenuItem>
+              <MenuItem value="5">5+ sentences</MenuItem>
+            </Select>
           </FormControl>
         </header>
       </div>
 
-      <ReviewList orderBy={orderBy} />
+      <ReviewList {...filters} />
 
       {user && (
         <div>

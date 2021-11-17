@@ -4,11 +4,22 @@ import React, { useCallback, useEffect } from "react";
 import { REVIEWS_QUERY } from "../graphql/Review";
 import { Review } from "./Review";
 
-export const ReviewList = ({ orderBy }) => {
+export const ReviewList = ({ orderBy, minSentences, minStars }) => {
+  const variables = { limit: 10, orderBy };
+
+  if (minSentences) {
+    variables.minSentences = minSentences;
+  }
+
+  if (minStars) {
+    variables.minStars = minStars;
+  }
+
   const { data, fetchMore, networkStatus } = useQuery(REVIEWS_QUERY, {
-    variables: { limit: 10, orderBy },
+    variables,
     notifyOnNetworkStatusChange: true,
     errorPolicy: "all",
+    nextFetchPolicy: "cache-and-network",
   });
 
   const reviews = (data && data.reviews) || [];
