@@ -1,4 +1,10 @@
-import { ApolloClient, HttpLink, InMemoryCache, split } from "@apollo/client";
+import {
+  ApolloClient,
+  gql,
+  HttpLink,
+  InMemoryCache,
+  split,
+} from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 import { WebSocketLink } from "@apollo/client/link/ws";
 import { getMainDefinition } from "@apollo/client/utilities";
@@ -10,6 +16,12 @@ import { countSentences } from "./helpers";
 const httpLink = new HttpLink({
   uri: "https://api.graphql.guide/graphql",
 });
+
+const typeDefs = gql`
+  extend type Section {
+    scrollY: Int
+  }
+`;
 
 const authLink = setContext(async (_, { headers }) => {
   const token = await getAuthToken({
@@ -48,7 +60,7 @@ const networkLink = split(
 
 const link = errorLink.concat(networkLink);
 
-const cache = new InMemoryCache({
+export const cache = new InMemoryCache({
   typePolicies: {
     Query: {
       fields: {
@@ -97,7 +109,12 @@ const cache = new InMemoryCache({
         },
       },
     },
+    Section: {
+      fields: {
+        scrollY: (scrollY) => scrollY || 0,
+      },
+    },
   },
 });
 
-export const apollo = new ApolloClient({ link, cache });
+export const apollo = new ApolloClient({ link, cache, typeDefs });
