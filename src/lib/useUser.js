@@ -1,4 +1,5 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useQuery, useReactiveVar } from "@apollo/client";
+import { loginInProgressVar } from "./auth";
 
 export const USER_QUERY = gql`
   query UserQuery {
@@ -19,6 +20,7 @@ export const USER_QUERY = gql`
 
 export const useUser = () => {
   const { data, loading } = useQuery(USER_QUERY);
+  const loginInProgress = useReactiveVar(loginInProgressVar);
 
-  return { loggingIn: loading, user: data?.currentUser };
+  return { loggingIn: loading || loginInProgress, user: data?.currentUser };
 };

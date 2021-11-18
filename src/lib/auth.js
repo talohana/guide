@@ -5,6 +5,7 @@ import {
 } from "auth0-helpers";
 import auth0 from "auth0-js";
 import { apollo } from "./apollo";
+import { makeVar } from "@apollo/client";
 
 const client = new auth0.WebAuth({
   domain: "graphql.auth0.com",
@@ -29,8 +30,11 @@ initAuthHelpers({
 });
 
 export const login = () => {
+  loginInProgressVar(true);
+
   auth0Login({
     onCompleted: (e) => {
+      loginInProgressVar(false);
       if (e) {
         console.log(e);
         return;
@@ -45,3 +49,5 @@ export const logout = () => {
   auth0Logout();
   apollo.resetStore();
 };
+
+export const loginInProgressVar = makeVar(false);
