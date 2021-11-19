@@ -1,64 +1,13 @@
-import {
-  ApolloClient,
-  gql,
-  HttpLink,
-  InMemoryCache,
-  split,
-} from "@apollo/client";
-import { setContext } from "@apollo/client/link/context";
-import { WebSocketLink } from "@apollo/client/link/ws";
-import { getMainDefinition } from "@apollo/client/utilities";
-import { getAuthToken } from "auth0-helpers";
+import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
 import { find } from "lodash";
-import { errorLink } from "./errorLink";
 import { countSentences } from "./helpers";
-
-const httpLink = new HttpLink({
-  uri: "https://api.graphql.guide/graphql",
-});
+import { link } from "./link";
 
 const typeDefs = gql`
   extend type Section {
     scrollY: Int
   }
 `;
-
-const authLink = setContext(async (_, { headers }) => {
-  const token = await getAuthToken({
-    doLoginIfTokenExpired: true,
-  });
-
-  if (token) {
-    return {
-      headers: {
-        ...headers,
-        authorization: `Bearer ${token}`,
-      },
-    };
-  } else {
-    return { headers };
-  }
-});
-
-const authedHttpLink = authLink.concat(httpLink);
-
-const wsLink = new WebSocketLink({
-  uri: `wss://api.graphql.guide/subscriptions`,
-  options: {
-    reconnect: true,
-  },
-});
-
-const networkLink = split(
-  ({ query }) => {
-    const { kind, operation } = getMainDefinition(query);
-    return kind === "OperationDefinition" && operation === "subscription";
-  },
-  wsLink,
-  authedHttpLink
-);
-
-const link = errorLink.concat(networkLink);
 
 export const cache = new InMemoryCache({
   typePolicies: {
