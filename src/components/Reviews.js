@@ -3,6 +3,7 @@ import { Add, Favorite } from "@material-ui/icons";
 import get from "lodash/get";
 import React, { useState } from "react";
 import { useUser } from "../lib/useUser";
+import { ReviewCreatedNotification } from "./ReviewCreatedNotification";
 import { ReviewForm } from "./ReviewForm";
 import { ReviewList } from "./ReviewList";
 
@@ -81,6 +82,7 @@ export const Reviews = () => {
       </div>
 
       <ReviewList {...filters} />
+      <ReviewCreatedNotification />
 
       {user && (
         <div>

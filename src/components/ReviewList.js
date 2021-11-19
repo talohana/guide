@@ -1,7 +1,13 @@
-import { NetworkStatus, useQuery } from "@apollo/client";
+import { gql, NetworkStatus, useQuery } from "@apollo/client";
 import { throttle } from "lodash";
 import React, { useCallback, useEffect } from "react";
-import { REVIEWS_QUERY } from "../graphql/Review";
+import {
+  ON_REVIEW_CREATED_SUBSCRIPTION,
+  ON_REVIEW_DELETED_SUBSCRIPTION,
+  ON_REVIEW_UPDATED_SUBSCRIPTION,
+  REVIEWS_QUERY,
+} from "../graphql/Review";
+import { cache } from "../lib/apollo";
 import { Review } from "./Review";
 
 export const ReviewList = ({ orderBy, minSentences, minStars }) => {
@@ -15,12 +21,94 @@ export const ReviewList = ({ orderBy, minSentences, minStars }) => {
     variables.minStars = minStars;
   }
 
-  const { data, fetchMore, networkStatus } = useQuery(REVIEWS_QUERY, {
-    variables,
-    notifyOnNetworkStatusChange: true,
-    errorPolicy: "all",
-    nextFetchPolicy: "cache-and-network",
-  });
+  const { data, fetchMore, networkStatus, subscribeToMore } = useQuery(
+    REVIEWS_QUERY,
+    {
+      variables,
+      notifyOnNetworkStatusChange: true,
+      errorPolicy: "all",
+      nextFetchPolicy: "cache-and-network",
+    }
+  );
+
+  useEffect(() => {
+    subscribeToMore({
+      document: ON_REVIEW_CREATED_SUBSCRIPTION,
+      updateQuery: (prev, { subscriptionData }) => {
+        cache.modify({
+          fields: {
+            reviews(existingReviewRefs = [], { storeFieldName }) {
+              if (!storeFieldName.includes("createdAt_DESC")) {
+                return existingReviewRefs;
+              }
+
+              const newReview = subscriptionData.data.reviewCreated;
+
+              const newReviewRef = cache.writeFragment({
+                data: newReview,
+                fragment: gql`
+                  fragment NewReview on Review {
+                    id
+                    text
+                    stars
+                    createdAt
+                    favorited
+                    author {
+                      id
+                    }
+                  }
+                `,
+              });
+
+              return [newReviewRef, ...existingReviewRefs];
+            },
+          },
+        });
+        return prev;
+      },
+    });
+
+    subscribeToMore({
+      document: ON_REVIEW_DELETED_SUBSCRIPTION,
+      updateQuery: (prev, { subscriptionData }) => {
+        cache.modify({
+          fields: {
+            reviews(existingReviewRefs = [], { readField }) {
+              const deletedId = subscriptionData.data.reviewDeleted;
+              return existingReviewRefs.filter(
+                (reviewRef) => deletedId !== readField("id", reviewRef)
+              );
+            },
+          },
+        });
+        return prev;
+      },
+    });
+
+    subscribeToMore({
+      document: ON_REVIEW_UPDATED_SUBSCRIPTION,
+      updateQuery: (prev, { subscriptionData }) => {
+        const updatedReview = subscriptionData.data.reviewUpdated;
+        cache.writeFragment({
+          id: cache.identify(updatedReview),
+          data: updatedReview,
+          fragment: gql`
+            fragment UpdatedReview on Review {
+              id
+              text
+              stars
+              createdAt
+              favorited
+              author {
+                id
+              }
+            }
+          `,
+        });
+        return prev;
+      },
+    });
+  }, [orderBy, subscribeToMore]);
 
   const reviews = (data && data.reviews) || [];
 
