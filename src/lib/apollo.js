@@ -21,6 +21,8 @@ export const cache = new InMemoryCache({
           },
           keyArgs: ["orderBy"],
         },
+        section: (_, { args: { id }, toReference }) =>
+          toReference({ __typename: "Section", id }),
       },
     },
     Section: {

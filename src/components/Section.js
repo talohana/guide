@@ -1,4 +1,4 @@
-import { gql, useMutation, useQuery } from "@apollo/client";
+import { gql, useApolloClient, useMutation, useQuery } from "@apollo/client";
 import { debounce, pick } from "lodash";
 import get from "lodash.get";
 import React, { useEffect, useLayoutEffect } from "react";
@@ -14,6 +14,20 @@ export const SECTION_BY_ID_QUERY = gql`
       id
       views
       scrollY @client
+    }
+  }
+`;
+
+const NEXT_SECTION_QUERY = gql`
+  query NextSection($id: Int!) {
+    section(id: $id) {
+      id
+      next {
+        id
+        content
+        views
+        scrollY @client
+      }
     }
   }
 `;
@@ -58,6 +72,7 @@ const VIEWED_SECTION_MUTATION = gql`
 `;
 
 export const Section = () => {
+  const client = useApolloClient();
   const { state, pathname } = useLocation();
 
   const page = deslugify(pathname);
@@ -118,6 +133,14 @@ export const Section = () => {
 
     return () => clearTimeout(timeoutID);
   }, [id, viewedSection]);
+
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+
+    client.query({ query: NEXT_SECTION_QUERY, variables: { id } });
+  }, [client, id]);
 
   const updateScrollY = debounce((scrollY) => {
     const scrollHasChangedSinceLastEvent = scrollY !== window.scrollY;
