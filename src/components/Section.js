@@ -1,13 +1,13 @@
 import { gql, useMutation, useQuery } from "@apollo/client";
+import { debounce, pick } from "lodash";
 import get from "lodash.get";
 import React, { useEffect, useLayoutEffect } from "react";
 import Skeleton from "react-loading-skeleton";
 import { useLocation } from "react-router";
-import { deslugify } from "../lib/helpers";
-import { pick, debounce } from "lodash";
 import { cache } from "../lib/apollo";
+import { deslugify } from "../lib/helpers";
 
-const SECTION_BY_ID_QUERY = gql`
+export const SECTION_BY_ID_QUERY = gql`
   query SectionContent($id: String!) {
     section(id: $id) {
       content

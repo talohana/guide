@@ -1,9 +1,10 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useApolloClient, useQuery } from "@apollo/client";
 import classNames from "classnames";
 import React from "react";
 import Skeleton from "react-loading-skeleton";
 import { NavLink } from "react-router-dom";
 import { slugify, withHyphens } from "../lib/helpers";
+import { SECTION_BY_ID_QUERY } from "./Section";
 
 const CHAPTER_QUERY = gql`
   query ChapterQuery {
@@ -30,6 +31,8 @@ const LoadingSkeleton = () => (
 );
 
 const Chapters = ({ chapters }) => {
+  const client = useApolloClient();
+
   return (
     <ul className="TableOfContents-chapters">
       {chapters.map((chapter) => {
@@ -47,10 +50,16 @@ const Chapters = ({ chapters }) => {
               }}
               className="TableOfContents-chapter-link"
               activeClassName="active"
-              isActive={(math, location) => {
+              isActive={(match, location) => {
                 const rootPath = location.pathname.split("/")[1];
                 return rootPath.includes(withHyphens(chapter.title));
               }}
+              onMouseOver={() =>
+                client.query({
+                  query: SECTION_BY_ID_QUERY,
+                  variables: { id: chapter.sections[0].id },
+                })
+              }
             >
               {chapterIsNumbered && (
                 <span className="TableOfContents-chapter-number">
@@ -73,6 +82,8 @@ const Chapters = ({ chapters }) => {
 };
 
 const Sections = ({ chapter }) => {
+  const client = useApolloClient();
+
   return (
     <ul className="TableOfContents-sections">
       {chapter.sections.map((section) => {
@@ -85,6 +96,12 @@ const Sections = ({ chapter }) => {
               }}
               className="TableOfContents-section-link"
               activeClassName="active"
+              onMouseOver={() => {
+                client.query({
+                  query: SECTION_BY_ID_QUERY,
+                  variables: { id: section.id },
+                });
+              }}
             >
               {section.title}
             </NavLink>
