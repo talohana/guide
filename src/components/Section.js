@@ -19,7 +19,7 @@ export const SECTION_BY_ID_QUERY = gql`
 `;
 
 const NEXT_SECTION_QUERY = gql`
-  query NextSection($id: Int!) {
+  query NextSection($id: String!) {
     section(id: $id) {
       id
       next {

@@ -1,4 +1,5 @@
-import { ApolloLink, HttpLink, split } from "@apollo/client";
+import { ApolloLink, split } from "@apollo/client";
+import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import { setContext } from "@apollo/client/link/context";
 import { WebSocketLink } from "@apollo/client/link/ws";
 import { getMainDefinition } from "@apollo/client/utilities";
@@ -6,7 +7,7 @@ import { RestLink } from "apollo-link-rest";
 import { getAuthToken } from "auth0-helpers";
 import { errorLink } from "./errorLink";
 
-const httpLink = new HttpLink({
+const httpLink = new BatchHttpLink({
   uri: "https://api.graphql.guide/graphql",
 });
 
