@@ -90,9 +90,12 @@ export const Section = () => {
     variables = pick(page, "chapterNumber", "sectionNumber");
   }
 
-  const { data, loading } = useQuery(query, { variables });
+  const { data } = useQuery(query, {
+    variables,
+    fetchPolicy: "cache-and-network",
+  });
 
-  let section, chapter;
+  let section, chapter, loading;
 
   // eslint-disable-next-line default-case
   switch (query) {
@@ -104,6 +107,7 @@ export const Section = () => {
         scrollY: get(data, "section.scrollY"),
       };
       chapter = state.chapter;
+      loading = !get(data, "section");
       break;
     case SECTION_BY_CHAPTER_TITLE_QUERY:
       section = get(data, "chapterByTitle.section");
@@ -111,10 +115,12 @@ export const Section = () => {
         ...get(data, "chapterByTitle"),
         number: null,
       };
+      loading = !get(data, "chapterByTitle");
       break;
     case SECTION_BY_NUMBER_QUERY:
       section = get(data, "chapterByNumber.section");
       chapter = get(data, "chapterByNumber");
+      loading = !get(data, "chapterByNumber");
       break;
   }
 
