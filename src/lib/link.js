@@ -1,4 +1,4 @@
-import { ApolloLink, split } from "@apollo/client";
+import { ApolloLink, HttpLink, split } from "@apollo/client";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import { setContext } from "@apollo/client/link/context";
 import { WebSocketLink } from "@apollo/client/link/ws";
@@ -51,3 +51,10 @@ const restLink = new RestLink({
 });
 
 export const link = ApolloLink.from([errorLink, restLink, networkLink]);
+
+export const spaceXLink = ApolloLink.from([
+  errorLink,
+  new HttpLink({
+    uri: "https://api.spacex.land/graphql",
+  }),
+]);

@@ -1,6 +1,6 @@
 import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
 import find from "lodash/find";
-import { link } from "./link";
+import { link, spaceXLink } from "./link";
 
 export const cache = new InMemoryCache({
   typePolicies: {
@@ -40,3 +40,8 @@ const typeDefs = gql`
 `;
 
 export const apollo = new ApolloClient({ link, cache, typeDefs });
+
+export const apolloSpace = new ApolloClient({
+  link: spaceXLink,
+  cache: new InMemoryCache(),
+});
