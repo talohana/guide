@@ -1,3 +1,5 @@
+/* eslint-disable graphql/template-strings */
+
 import { gql, useApolloClient, useMutation, useQuery } from "@apollo/client";
 import { debounce, pick } from "lodash";
 import get from "lodash.get";

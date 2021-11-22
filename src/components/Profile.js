@@ -1,10 +1,10 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql as spaceql, useQuery } from "@apollo/client";
 import React, { useState } from "react";
 import { apolloSpace } from "../lib/apollo";
 import { login, logout } from "../lib/auth";
 import { useUser } from "../lib/useUser";
 
-const LAUNCH_QUERY = gql`
+const LAUNCH_QUERY = spaceql`
   query LaunchQuery {
     launchNext {
       details
@@ -21,7 +21,7 @@ const LAUNCH_QUERY = gql`
 `;
 
 const Launch = () => {
-  const { data, loading } = useQuery(LAUNCH_QUERY, {
+  const { data } = useQuery(LAUNCH_QUERY, {
     fetchPolicy: "cache-and-network",
     client: apolloSpace,
     onCompleted: () =>

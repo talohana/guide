@@ -1,3 +1,5 @@
+/* eslint-disable graphql/template-strings */
+
 import { gql, useQuery } from "@apollo/client";
 import { IconButton } from "@material-ui/core";
 import { MyLocation } from "@material-ui/icons";

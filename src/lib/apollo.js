@@ -33,6 +33,7 @@ export const cache = new InMemoryCache({
   },
 });
 
+/* eslint-disable graphql/template-strings */
 const typeDefs = gql`
   extend type Section {
     scrollY: Int
